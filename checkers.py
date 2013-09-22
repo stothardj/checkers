@@ -53,13 +53,50 @@ class CheckerBoard:
       letter = space_pad_front(str(self.size - r), 2)
       rows[r] = letter + '|' + ''.join(rows[r]) + '|'
     oneline = '\n'.join(rows)
-    # I FINALLY ACTUALLY WANT TO MULTIPLY A STRING AND GET THIS BEHAVIOR!
     horizontal = '  +' + ('-' * self.size) + '+'
     oneline = horizontal + '\n' + oneline + '\n' + horizontal
     top = '   ' + ''.join(chr(i+ord('a')) for i in range(0,self.size))
     return top + '\n' + oneline
 
-print(CheckerBoard(10,4))
 
-print(CheckerBoard(8,3))
+  # Returns whether moving from src to dest would be a valid move. Does not move.
+  # Does not take into account turn order. Board positions should be given as (r,c)
+  def is_valid_move(self, src, dest):
+    (sr,sc) = src
+    (dr,dc) = dest
+    # Check if within range position
+    if not(all(0 <= i < self.size for i in [sr,sc,dr,dc])):
+      return False
+    # Assert something at src to move
+    if src not in self.pieces:
+      return False
+    # Cannot move to occupied square
+    if dest in self.pieces:
+      return False
+    return True
 
+  # Move piece from src to dest. Does not enforce turn order. Returns false
+  # if invalid move (leaving board unchanged) or true if move made. Board positions
+  # should be given as (r,c)
+  def move(self, src, dest):
+    if not self.is_valid_move(src,dest):
+      return False
+    p = self.pieces[src]
+    del self.pieces[src]
+    self.pieces[dest] = p
+    return True
+
+  # Will transform a8 to (0,0) etc.
+  def str_to_boardpos(self, s):
+    cl = s[:1]
+    rl = s[1:]
+    c = ord(cl) - ord('a')
+    r = self.size - int(rl)
+    return (r,c)
+
+board = CheckerBoard(8,3)
+print(board)
+board.move((2,1), (3,0))
+print(board)
+
+print(board.str_to_boardpos('b6'))
