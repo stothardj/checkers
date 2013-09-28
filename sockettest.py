@@ -1,7 +1,7 @@
 import socket
+import checkers
 
-s = socket.socket(
-  socket.AF_INET, socket.SOCK_STREAM)
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Using localhost will be faster but only allow accessing locally
 # If you want access from other computers use socket.gethostname()

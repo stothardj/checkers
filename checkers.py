@@ -24,6 +24,22 @@ class CheckerPiece:
       return c(s.lower(), True)
     raise Exception('String does not represent checker piece')
 
+  # Since a CheckerPiece doesn't know it's position, it relies on the 
+  # CheckerBoard to add the move_directions to the current position to
+  # get the new position. This means this can't actually check if this
+  # goes off the board. Note for simplicity black is always starting at
+  # the top going down
+  def move_directions(self):
+    if self.color == Color.BLACK:
+      forwards = -1
+    else:
+      forwards = 1
+    yield (forwards, -1)
+    yield (forwards, 1)
+    if self.king:
+      yield (-forwards, -1)
+      yield (-forwards, 1)
+
 def space_pad_front(s, size):
   return ''.join(' ' for i in range(0, size-len(s))) + s
 
@@ -65,7 +81,7 @@ class CheckerBoard:
     (sr,sc) = src
     (dr,dc) = dest
     # Check if within range position
-    if not(all(0 <= i < self.size for i in [sr,sc,dr,dc])):
+    if not(all(0 <= i < self.size for i in (sr,sc,dr,dc))):
       return False
     # Assert something at src to move
     if src not in self.pieces:
@@ -73,6 +89,15 @@ class CheckerBoard:
     # Cannot move to occupied square
     if dest in self.pieces:
       return False
+    # Must move to black square
+    # Note a square is black iff exactly one of it's row or column is even
+    if 1 != (dr%2) + (dc%2):
+      return False
+    p = self.pieces[src]
+    # If we are not trying to jump a piece, nothing left to check
+    if (dr-sr,dc-sc) in p.move_directions():
+      return True
+    # TODO: Otherwise check to see if valid jump
     return True
 
   # Move piece from src to dest. Does not enforce turn order. Returns false
@@ -94,9 +119,3 @@ class CheckerBoard:
     r = self.size - int(rl)
     return (r,c)
 
-board = CheckerBoard(8,3)
-print(board)
-board.move((2,1), (3,0))
-print(board)
-
-print(board.str_to_boardpos('b6'))
