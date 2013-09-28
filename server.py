@@ -1,5 +1,9 @@
 import socket
+import random
+
 import checkers
+
+random.seed()
 
 # Using localhost will be faster but only allow accessing locally
 # If you want access from other computers use socket.gethostname()
@@ -97,6 +101,21 @@ def parse_command(s):
     raise ValueError("Command %s did not contain colon. Not a valid command" % s)
   return command, details
 
+class ServerPlayer:
+  def __init__(self, color, conn):
+    self.color = color
+    self.conn = conn
+
+  def get_command(self):
+    while 1:
+      line = self.conn.read_line()
+      if not line:
+        return
+      try:
+        return parse_command(line)
+      except ValueError:
+        self.conn.write_line('REJECTED:Unparseable command')
+
 connections = []
 
 while len(connections) < 2:
@@ -106,43 +125,22 @@ while len(connections) < 2:
   connections.append(SimpleSocket(conn))
 
 print('All players connected')
+random.shuffle(connections)
+players = []
 
 board_size = 8
 board_rows = 3
+for (c, turn, color) in zip(connections, ('first', 'second'), (checkers.Color.RED, checkers.Color.BLACK)):
+  players.append(ServerPlayer(color, c))
+  c.write_line('GAMESTART:board_size=%s,board_rows=%s,turn=%s,color=%s' \
+    % (board_size, board_rows, turn, color))
+
 board = checkers.CheckerBoard(board_size, board_rows)
-for (c, turn) in zip(connections, ('first', 'second')):
-  c.write_line('GAMESTART:board_size=%s,board_rows=%s,turn=%s' \
-    % (board_size, board_rows, turn))
+game = checkers.CheckerGame(board, checkers.Color.RED, players)
 
 turn = 0
-while 1:
-  print(board)
-  conn = connections[turn]
-  data = conn.read_line()
-  if not data: break
-  print(data)
-  try:
-    command, details = parse_command(data)
-  except ValueError: 
-    conn.write_line('REJECTED:Unparseable command')
-    continue
-  if command == 'QUIT':
-    print('Player forfeits')
-    conn.write_line('GAMEOVER:Loss')
-    connections[1 - turn].write_line('GAMEOVER:Win')
-    break
-  elif command == 'MOVE':
-    (src, comma, dest) = details.partition(',')
-    if not comma:
-      conn.write_line('REJECTED:No comma found in move')
-      continue
-    ps = board.str_to_boardpos(src)
-    pd = board.str_to_boardpos(dest)
-    if board.move(ps, pd):
-      conn.write_line('ACCEPTED:Move accepted')
-      turn = 1 - turn
-    else:
-      conn.write_line('REJECTED:Not a valid checkers move')
+while game.take_turn():
+  print(game.board)
 
 for c in connections:
   c.close()

@@ -119,3 +119,48 @@ class CheckerBoard:
     r = self.size - int(rl)
     return (r,c)
 
+class CheckerGame:
+  def __init__(self, board, first, players):
+    self.board = board
+    self.players = players
+    i = 0
+    for player in players:
+      if player.color == first:
+        self.turn = i
+      i += 1
+
+  # Takes a full turn for one player. Returns True if the game continues
+  def take_turn(self):
+    player = self.players[self.turn]
+    other = self.players[1 - self.turn]
+
+    while 1:
+      data = player.get_command()
+      if not data:
+        other.conn.write_line('GAMOVEOVER:Win')
+        return False
+      command, details = data
+      if command == 'QUIT':
+        print('Player forfeits')
+        player.conn.write_line('GAMEOVER:Loss')
+        other.conn.write_line('GAMEOVER:Win')
+        return False
+      elif command == 'MOVE':
+        (src, comma, dest) = details.partition(',')
+        if not comma:
+          player.conn.write_line('REJECTED:No comma found in move')
+        else:
+          ps = self.board.str_to_boardpos(src)
+          pd = self.board.str_to_boardpos(dest)
+          if self.board.move(ps, pd):
+            player.conn.write_line('ACCEPTED:Move accepted')
+            other.conn.write_line('MOVE:%s' % details)
+            break
+          else:
+            player.conn.write_line('REJECTED:Not a valid checkers move')
+      else:
+        player.conn.write_line('REJECTED:Not a valid command')
+
+    self.turn = 1 - self.turn
+    return True
+
