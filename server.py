@@ -26,17 +26,27 @@ class LineReader:
   def __init__(self, source):
     self.source = source
     self.remaining = b''
+    self.closed = False
 
   def read_line(self):
+    if self.closed:
+      return None
     newline_pos = self.remaining.find(b'\n')
     while newline_pos == -1:
-      self.remaining += self.source.read()
+      new_text = self.source.read()
+      if not new_text:
+        self.closed = True
+        if self.remaining == b'':
+          return None
+        return self.remaining
+      self.remaining += new_text
       newline_pos = self.remaining.find(b'\n')
     ret = self.remaining[0:newline_pos]
     if ret[-1:] == b'\r':
       ret = ret[:-1]
     self.remaining = self.remaining[newline_pos+1:]
     return ret
+
 
 while 1:
   print('Waiting for connections')
