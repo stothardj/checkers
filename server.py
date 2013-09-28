@@ -138,7 +138,7 @@ for (c, turn, color) in zip(connections, ('first', 'second'), (checkers.Color.RE
 board = checkers.CheckerBoard(board_size, board_rows)
 game = checkers.CheckerGame(board, checkers.Color.RED, players)
 
-turn = 0
+print(game.board)
 while game.take_turn():
   print(game.board)
 

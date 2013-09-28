@@ -76,8 +76,9 @@ class CheckerBoard:
 
 
   # Returns whether moving from src to dest would be a valid move. Does not move.
-  # Does not take into account turn order. Board positions should be given as (r,c)
-  def is_valid_move(self, src, dest):
+  # Does not take into account turn order. Board positions should be given as (r,c).
+  # Pass in the color you are allowed to move.
+  def is_valid_move(self, src, dest, color):
     (sr,sc) = src
     (dr,dc) = dest
     # Check if within range position
@@ -94,6 +95,9 @@ class CheckerBoard:
     if 1 != (dr%2) + (dc%2):
       return False
     p = self.pieces[src]
+    # Check to make sure not trying to move other player's piece
+    if p.color != color:
+      return False
     # If we are not trying to jump a piece, nothing left to check
     if (dr-sr,dc-sc) in p.move_directions():
       return True
@@ -102,9 +106,9 @@ class CheckerBoard:
 
   # Move piece from src to dest. Does not enforce turn order. Returns false
   # if invalid move (leaving board unchanged) or true if move made. Board positions
-  # should be given as (r,c)
-  def move(self, src, dest):
-    if not self.is_valid_move(src,dest):
+  # should be given as (r,c). Pass in the color you are allowed to move.
+  def move(self, src, dest, color):
+    if not self.is_valid_move(src, dest, color):
       return False
     p = self.pieces[src]
     del self.pieces[src]
@@ -152,7 +156,7 @@ class CheckerGame:
         else:
           ps = self.board.str_to_boardpos(src)
           pd = self.board.str_to_boardpos(dest)
-          if self.board.move(ps, pd):
+          if self.board.move(ps, pd, player.color):
             player.conn.write_line('ACCEPTED:Move accepted')
             other.conn.write_line('MOVE:%s' % details)
             break
