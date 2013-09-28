@@ -4,12 +4,22 @@ import checkers
 # Using localhost will be faster but only allow accessing locally
 # If you want access from other computers use socket.gethostname()
 HOST = 'localhost'
-PORT = 8081
+ATTEMPT_PORTS = range(8080, 8090)
+
+def find_port(attempt_ports):
+  for port in attempt_ports:
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+      s.bind((HOST, port))
+      return s, port
+    except OSError:
+      pass
+  raise RuntimeError("Could not find open port")
+
+s, PORT = find_port(ATTEMPT_PORTS)
 
 print('Starting server on host %s port %s' % (HOST, PORT))
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-s.bind((HOST, PORT))
 s.listen(2)
 
 # A data source from a socket. Converts the byte array to a string before
@@ -97,8 +107,16 @@ while len(connections) < 2:
 
 print('All players connected')
 
+board_size = 8
+board_rows = 3
+board = checkers.CheckerBoard(board_size, board_rows)
+for (c, turn) in zip(connections, ('first', 'second')):
+  c.write_line('GAMESTART:board_size=%s,board_rows=%s,turn=%s' \
+    % (board_size, board_rows, turn))
+
 turn = 0
 while 1:
+  print(board)
   data = connections[turn].read_line()
   turn = 1 - turn
   if not data: break
