@@ -4,7 +4,7 @@ import checkers
 # Using localhost will be faster but only allow accessing locally
 # If you want access from other computers use socket.gethostname()
 HOST = 'localhost'
-PORT = 8080
+PORT = 8081
 
 print('Starting server on host %s port %s' % (HOST, PORT))
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -12,6 +12,8 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind((HOST, PORT))
 s.listen(2)
 
+# A data source from a socket. Converts the byte array to a string before
+# returning it.
 class SocketSource:
   def __init__(self, conn):
     self.conn = conn
@@ -51,15 +53,58 @@ class LineReader:
     self.remaining = self.remaining[newline_pos+1:]
     return ret
 
-while 1:
-  print('Waiting for connections')
+# Wraps a socket to hide the annoying details and lack of guarentees
+class SimpleSocket:
+  def __init__(self, conn):
+    self.conn = conn
+    self.lr = LineReader(SocketSource(conn))
+
+  # Reads a line from the socket. Returns None if connection is broken
+  def read_line(self):
+    return self.lr.read_line()
+
+  # Writes a line to the socket. Appends a newline to msg so DON'T put it in
+  # there yourself. msg should be a string. Will encode into bytes for you.
+  # Returns True on Success, False on fail (socket is closed)
+  def write_line(self, msg):
+    msg += '\n'
+    msg = msg.encode()
+    to_send = len(msg)
+    total_sent = 0
+    while total_sent < to_send:
+      sent = self.conn.send(msg[total_sent:])
+      if sent == None:
+        return False
+      total_sent += sent
+    return True
+
+  def close(self):
+    self.conn.close()
+
+def parse_command(s):
+  (command, colon, details) = s.partition(':')
+  if colon == '':
+    raise ValueError("Command %s did not contain colon. Not a valid command" % s)
+  return (command, details)
+
+connections = []
+
+while len(connections) < 2:
+  print('Waiting for 2 connections. Currently have %s' % len(connections))
   conn, addr = s.accept()
   print('Connected to from', addr)
-  lr = LineReader(SocketSource(conn))
-  while 1:
-    data = lr.read_line()
-    if not data: break
-    print(data)
-  conn.close()
+  connections.append(SimpleSocket(conn))
+
+print('All players connected')
+
+turn = 0
+while 1:
+  data = connections[turn].read_line()
+  turn = 1 - turn
+  if not data: break
+  print(data)
+
+for c in connections:
+  c.close()
 
 s.close()
