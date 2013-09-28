@@ -16,11 +16,11 @@ def find_port(attempt_ports):
       pass
   raise RuntimeError("Could not find open port")
 
-s, PORT = find_port(ATTEMPT_PORTS)
+serversocket, PORT = find_port(ATTEMPT_PORTS)
 
 print('Starting server on host %s port %s' % (HOST, PORT))
 
-s.listen(2)
+serversocket.listen(2)
 
 # A data source from a socket. Converts the byte array to a string before
 # returning it.
@@ -95,13 +95,13 @@ def parse_command(s):
   (command, colon, details) = s.partition(':')
   if colon == '':
     raise ValueError("Command %s did not contain colon. Not a valid command" % s)
-  return (command, details)
+  return command, details
 
 connections = []
 
 while len(connections) < 2:
   print('Waiting for 2 connections. Currently have %s' % len(connections))
-  conn, addr = s.accept()
+  conn, addr = serversocket.accept()
   print('Connected to from', addr)
   connections.append(SimpleSocket(conn))
 
@@ -117,12 +117,34 @@ for (c, turn) in zip(connections, ('first', 'second')):
 turn = 0
 while 1:
   print(board)
-  data = connections[turn].read_line()
-  turn = 1 - turn
+  conn = connections[turn]
+  data = conn.read_line()
   if not data: break
   print(data)
+  try:
+    command, details = parse_command(data)
+  except ValueError: 
+    conn.write_line('REJECTED:Unparseable command')
+    continue
+  if command == 'QUIT':
+    print('Player forfeits')
+    conn.write_line('GAMEOVER:Loss')
+    connections[1 - turn].write_line('GAMEOVER:Win')
+    break
+  elif command == 'MOVE':
+    (src, comma, dest) = details.partition(',')
+    if not comma:
+      conn.write_line('REJECTED:No comma found in move')
+      continue
+    ps = board.str_to_boardpos(src)
+    pd = board.str_to_boardpos(dest)
+    if board.move(ps, pd):
+      conn.write_line('ACCEPTED:Move accepted')
+      turn = 1 - turn
+    else:
+      conn.write_line('REJECTED:Not a valid checkers move')
 
 for c in connections:
   c.close()
 
-s.close()
+serversocket.close()
