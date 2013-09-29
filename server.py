@@ -70,9 +70,7 @@ if players[0].color != checkers.Color.RED:
 board = checkers.CheckerBoard(board_size, board_rows)
 game = checkers.CheckerGame(board, players)
 
-print(game.board)
-while game.take_turn():
-  print(game.board)
+game.play()
 
 for c in connections:
   c.close()

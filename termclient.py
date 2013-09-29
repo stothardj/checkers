@@ -8,7 +8,7 @@ import checkers
 
 parser = argparse.ArgumentParser(description = 'Terminal checkers client')
 parser.add_argument('--hostname', default='localhost')
-parser.add_argument('-p', '--port', default=8080)
+parser.add_argument('-p', '--port', default=8080, type=int)
 
 args = parser.parse_args()
 
@@ -83,7 +83,6 @@ def setup_game(game_opts):
 
 game = setup_game(game_opts)
 
-print(game.board)
-while game.take_turn():
-  print(game.board)
+game.play()
 
+conn.close()

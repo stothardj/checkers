@@ -171,3 +171,7 @@ class CheckerGame:
     self.turn = 1 - self.turn
     return True
 
+  def play(self):
+    print(self.board)
+    while(self.take_turn()):
+      print(self.board)
