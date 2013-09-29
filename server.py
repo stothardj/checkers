@@ -28,12 +28,6 @@ print('Starting server on host %s port %s' % (HOST, PORT))
 
 serversocket.listen(2)
 
-def parse_command(s):
-  (command, colon, details) = s.partition(':')
-  if colon == '':
-    raise ValueError("Command %s did not contain colon. Not a valid command" % s)
-  return command, details
-
 class ServerPlayer:
   def __init__(self, color, conn):
     self.color = color
@@ -42,12 +36,14 @@ class ServerPlayer:
   def get_command(self):
     while 1:
       line = self.conn.read_line()
-      if not line:
-        return
+      if not line: return
       try:
-        return parse_command(line)
+        return ipc.parse_command(line)
       except ValueError:
         self.conn.write_line('REJECTED:Unparseable command')
+
+  def show_player(self, line):
+    self.conn.write_line(line)
 
 connections = []
 
@@ -68,8 +64,11 @@ for (c, turn, color) in zip(connections, ('first', 'second'), (checkers.Color.RE
   c.write_line('GAMESTART:board_size=%s,board_rows=%s,turn=%s,color=%s' \
     % (board_size, board_rows, turn, color))
 
+if players[0].color != checkers.Color.RED:
+  players.reverse()
+
 board = checkers.CheckerBoard(board_size, board_rows)
-game = checkers.CheckerGame(board, checkers.Color.RED, players)
+game = checkers.CheckerGame(board, players)
 
 print(game.board)
 while game.take_turn():

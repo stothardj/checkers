@@ -68,3 +68,10 @@ class SimpleSocket:
 
   def close(self):
     self.conn.close()
+
+def parse_command(s):
+  (command, colon, details) = s.partition(':')
+  if colon == '':
+    raise ValueError("Command %s did not contain colon. Not a valid command" % s)
+  return command, details
+
