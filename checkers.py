@@ -81,7 +81,14 @@ class CheckerBoard:
     top = '   ' + ''.join(chr(i+ord('a')) for i in range(0,self.size))
     return top + '\n' + oneline
 
-
+  # Returns true if the move is in a jump direction. Does not check to see if
+  # there is actually a piece there to jump or if it lands off the board
+  def is_move_jump(self, src, dest):
+    (sr,sc) = src
+    (dr,dc) = dest
+    p = self.pieces[src]
+    return (dr-sr,dc-sc) in (tuple(2*x for x in tup) for tup in p.move_directions())
+  
   # Returns whether moving from src to dest would be a valid move. Does not move.
   # Does not take into account turn order. Board positions should be given as (r,c).
   # Pass in the color you are allowed to move.
@@ -106,15 +113,17 @@ class CheckerBoard:
     if p.color != color:
       return False
     # If we are not trying to jump a piece, nothing left to check
-    print( (dr-sr, dc-sc) )
-    print( [tuple(2*x for x in tup) for tup in p.move_directions()] )
     if (dr-sr,dc-sc) in p.move_directions():
       return True
     # Otherwise check to see if valid jump
     # Is this even somewhere we could jump to
-    if not (dr-sr,dc-sc) in (tuple(2*x for x in tup) for tup in p.move_directions()):
+    if not self.is_move_jump(src, dest):
       return False
-    jumped = self.pieces[(dr+sr)//2,(dc+sc)//2]
+    jump_pos = (dr+sr)//2,(dc+sc)//2
+    # Cannot jump over nothing
+    if jump_pos not in self.pieces:
+      return False
+    jumped = self.pieces[jump_pos]
     # Cannot jump own color
     if jumped.color == color:
       return False
@@ -126,6 +135,10 @@ class CheckerBoard:
   def move(self, src, dest, color):
     if not self.is_valid_move(src, dest, color):
       return False
+    if self.is_move_jump(src, dest):
+      (sr,sc) = src
+      (dr,dc) = dest
+      del self.pieces[(dr+sr)//2,(dc+sc)//2]
     p = self.pieces[src]
     del self.pieces[src]
     self.pieces[dest] = p
