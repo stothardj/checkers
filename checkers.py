@@ -38,9 +38,9 @@ class CheckerPiece:
   # the top going down
   def move_directions(self):
     if self.color == Color.BLACK:
-      forwards = -1
-    else:
       forwards = 1
+    else:
+      forwards = -1
     yield (forwards, -1)
     yield (forwards, 1)
     if self.king:
@@ -106,9 +106,18 @@ class CheckerBoard:
     if p.color != color:
       return False
     # If we are not trying to jump a piece, nothing left to check
+    print( (dr-sr, dc-sc) )
+    print( [tuple(2*x for x in tup) for tup in p.move_directions()] )
     if (dr-sr,dc-sc) in p.move_directions():
       return True
-    # TODO: Otherwise check to see if valid jump
+    # Otherwise check to see if valid jump
+    # Is this even somewhere we could jump to
+    if not (dr-sr,dc-sc) in (tuple(2*x for x in tup) for tup in p.move_directions()):
+      return False
+    jumped = self.pieces[(dr+sr)//2,(dc+sc)//2]
+    # Cannot jump own color
+    if jumped.color == color:
+      return False
     return True
 
   # Move piece from src to dest. Does not enforce turn order. Returns false

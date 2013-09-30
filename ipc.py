@@ -60,7 +60,10 @@ class SimpleSocket:
     to_send = len(msg)
     total_sent = 0
     while total_sent < to_send:
-      sent = self.conn.send(msg[total_sent:])
+      try:
+        sent = self.conn.send(msg[total_sent:])
+      except ConnectionResetError:
+        return False
       if sent == None:
         return False
       total_sent += sent
