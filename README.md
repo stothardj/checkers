@@ -71,7 +71,9 @@ Every message follows the following format:
 
     COMMAND:details\n
 
-(both \n and \r\n newlines are supported)
+Both \n and \r\n newlines are supported newlines. Everything is case sensitive.
+COMMAND should always be all caps.
+
 
 The following commands can be sent from the client
 --------------------------------------------------
@@ -81,16 +83,16 @@ The following commands can be sent from the client
  <dd>This causes the current player to lose</dd>
 
  <dt>MOVE:a3,b4</dt>
- <dd>This moves the piece to move from a3 to b4. This is a valid first move.
+ <dd>This moves the piece from a3 to b4. This is a valid first move.
      For double (or more) jumps simply use more commas. For example:
-     Move:a3,c5,a7</dd>
+     MOVE:a3,c5,a7</dd>
 </dl>
 
 The following commands can be sent from the server
 --------------------------------------------------
 
 <dl>
- <dt>GAMESTART:board\_size=8,board\_rows=3,turn=second,color=b</dt>
+ <dt>GAMESTART:board_size=8,board_rows=3,turn=second,color=b</dt>
  <dd>Sinals the start of the game. This is received by black (shown by
      the b) who will go second.</dd>
 
