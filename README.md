@@ -3,7 +3,8 @@ checkers
 
 Simple checkers server for practice writing ai clients
 
-== File structure ==
+File structure
+--------------
 This contains two executable scripts "server.py" and "termclient.py".
 
 server.py executes a rule enforcing checkers server. It accepts two connections then
@@ -26,14 +27,17 @@ checkers.py contains all logic having to do with checkers.
 
 All code is python 3.
 
-=== Instructions for people with only python 2 installed ===
+Instructions for people with only python 2 installed
+----------------------------------------------------
 
 Install python 3
 
-== Initial layout and terminology ==
+Initial layout and terminology
+------------------------------
 
 The board initial layout looks as follows:
 
+<pre>
    abcdefgh
   +--------+
  8| b b b b|
@@ -45,6 +49,7 @@ The board initial layout looks as follows:
  2| r r r r|
  1|r r r r |
   +--------+
+</pre>
 
 r stands for a red piece. b stands for a black piece.
 R will be used to represent a red king. B will be used to represent a black king.
@@ -56,7 +61,8 @@ To keep things simple for both the ai and the server:
 A board position is given specified by the column and row. For example there is a
 black piece at a7.
 
-== The protocol ==
+The protocol
+------------
 
 First, start the server. Once both players are connected it sends out messages
 to let the clients know the game has started and some of the game options.
@@ -70,7 +76,8 @@ The above message follows the same format as all messages in the protocol:
 COMMAND:details\n
 (both \n and \r\n newlines are supported)
 
-=== The following commands can be sent from the client ===
+The following commands can be sent from the client
+--------------------------------------------------
 
  * QUIT:ignored
 This causes the current player to lose
@@ -80,7 +87,8 @@ This moves the piece to move from a3 to b4. This is a valid first move.
 For double (or more) jumps simply use more commas. For example:
 Move:a3,c5,a7
 
-=== The following commands can be sent from the server ===
+The following commands can be sent from the server
+--------------------------------------------------
 
  * ACCEPTED:unimportant
 Signals that the move just given by the client was accepted as a valid
