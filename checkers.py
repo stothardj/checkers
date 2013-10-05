@@ -176,8 +176,8 @@ class CheckerGame:
         other.show_player('GAMEOVER:Win')
         return False
       elif command == 'MOVE':
-        # Save board so can restore after doublejumps
-        current_board = copy.deepcopy(self.board)
+        # Act on a temporary board so only commit if all moves in a double jump are sucessfull
+        temp_board = copy.deepcopy(self.board)
         pos_ls = details.split(',')
         if len(pos_ls) < 2:
           player.show_player('REJECTED:No comma found in move')
@@ -185,21 +185,21 @@ class CheckerGame:
           # If there's more than one move, they must all be jumps
           require_jumps = len(pos_ls) > 2
           any_rejections = False
-          ps = self.board.str_to_boardpos(pos_ls[0])
+          ps = temp_board.str_to_boardpos(pos_ls[0])
           for dest in pos_ls[1:]:
-            pd = self.board.str_to_boardpos(dest)
-            if require_jumps and not self.board.is_move_jump(ps, pd):
+            pd = temp_board.str_to_boardpos(dest)
+            if require_jumps and not temp_board.is_move_jump(ps, pd):
               any_rejections = True
-              self.board = current_board
               player.show_player('REJECTED:All moves must be a jump if more than one move')
               break
-            elif not self.board.move(ps, pd, player.color):
+            elif not temp_board.move(ps, pd, player.color):
               any_rejections = True
-              self.board = current_board
               player.show_player('REJECTED:Not a valid checkers move')
               break
             ps = pd
           if not any_rejections:
+            # Commit board
+            self.board = temp_board
             player.show_player('ACCEPTED:Move accepted')
             other.show_player('MOVE:%s' % details)
             break
