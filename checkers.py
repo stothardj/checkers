@@ -109,6 +109,20 @@ class CheckerBoard:
           if self.is_valid_move(pos, (dr,dc), color):
             return True
     return False
+
+  # Returns true if the player controlling color piece has a move avaiable to her.
+  def can_move(self, color):
+    if self.can_jump(color):
+      return True
+    for pos,piece in self.pieces.items():
+      if piece.color == color:
+        (sr,sc) = pos
+        for (mr,mc) in piece.move_directions():
+          dr = sr + mr
+          dc = sc + mc
+          if self.is_valid_move(pos, (dr,dc), color):
+            return True
+    return False
   
   # Returns whether moving from src to dest would be a valid move. Does not move.
   # Does not take into account turn order. Board positions should be given as (r,c).
@@ -204,7 +218,7 @@ class CheckerGame:
   # Returns True if move is accepted.
   # Modifies board in place. If move was rejected consider board to
   # contain garbage.
-  def _attempt_move(self, board, pos_ls):
+  def _attempt_move(self, board, turn_color, pos_ls):
     # If there's more than one move, they must all be jumps
     require_jumps = len(pos_ls) > 2
     start_pos = pos_ls[0]
@@ -231,7 +245,7 @@ class CheckerGame:
     for dest in pos_ls[1:]:
       if require_jumps and not board.is_move_jump(src, dest):
         return False
-      elif not board.move(src, dest, piece.color):
+      elif not board.move(src, dest, turn_color):
         return False
       src = dest
     # Once started, a multiple jump must be carried through to completion. However, if
@@ -257,6 +271,7 @@ class CheckerGame:
   def take_turn(self):
     player = self.players[self.turn]
     other = self.players[1 - self.turn]
+    turn_color = [Color.RED,Color.BLACK][self.turn]
 
     while 1:
       data = player.get_command()
@@ -276,7 +291,7 @@ class CheckerGame:
         else:
           # Act on a temporary board so only commit if all moves in a double jump are sucessfull
           temp_board = copy.deepcopy(self.board)
-          accepted = self._attempt_move(temp_board, pos_ls)
+          accepted = self._attempt_move(temp_board, turn_color, pos_ls)
           if accepted:
             # Commit board
             self.board = temp_board
