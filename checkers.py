@@ -48,7 +48,7 @@ class CheckerPiece:
       yield (-forwards, 1)
 
 def space_pad_front(s, size):
-  return ''.join(' ' for i in range(0, size-len(s))) + s
+  return ' ' * (size-len(s)) + s
 
 # A checker board. Represented internally as a map of positions to pieces
 # (0,0) represents top-left. Is (r,c) so (size-1,0) is bottom-left. Can only instantiate
