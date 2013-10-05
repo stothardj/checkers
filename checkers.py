@@ -49,9 +49,6 @@ class CheckerPiece:
       yield (-forwards, -1)
       yield (-forwards, 1)
 
-def space_pad_front(s, size):
-  return ' ' * (size-len(s)) + s
-
 # A checker board. Represented internally as a map of positions to pieces
 # (0,0) represents top-left. Is (r,c) so (size-1,0) is bottom-left. Can only instantiate
 # starting board and then mutate it from there. For simplicy, always puts black at
@@ -75,7 +72,7 @@ class CheckerBoard:
       (r,c) = k
       rows[r][c] = str(v)
     for r in range(0,self.size):
-      letter = space_pad_front(str(self.size - r), 2)
+      letter = str(self.size - r).rjust(2)
       rows[r] = letter + '|' + ''.join(rows[r]) + '|'
     oneline = '\n'.join(rows)
     horizontal = '  +' + ('-' * self.size) + '+'
