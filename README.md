@@ -67,13 +67,10 @@ The protocol
 First, start the server. Once both players are connected it sends out messages
 to let the clients know the game has started and some of the game options.
 
-One player will receive:
-GAMESTART:board\_size=8,board\_rows=3,turn=first,color=r
-The other player will receive:
-GAMESTART:board\_size=8,board\_rows=3,turn=second,color=b
+Every message follows the following format:
 
-The above message follows the same format as all messages in the protocol:
-COMMAND:details\n
+    COMMAND:details\n
+
 (both \n and \r\n newlines are supported)
 
 The following commands can be sent from the client
@@ -93,6 +90,10 @@ The following commands can be sent from the server
 --------------------------------------------------
 
 <dl>
+ <dt>GAMESTART:board\_size=8,board\_rows=3,turn=second,color=b</dt>
+ <dd>Sinals the start of the game. This is received by black (shown by
+     the b) who will go second.</dd>
+
  <dt>ACCEPTED:unimportant</dt>
  <dd>Signals that the move just given by the client was accepted as a valid
      move by the server.</dd>
