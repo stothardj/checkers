@@ -33,21 +33,25 @@ class CheckerPiece:
       return c(s.lower(), True)
     raise Exception('String does not represent checker piece')
 
+  # What is forwards for this color piece
+  def forwards(self):
+    if self.color == Color.BLACK:
+      return 1
+    else:
+      return -1
+
   # Since a CheckerPiece doesn't know it's position, it relies on the 
   # CheckerBoard to add the move_directions to the current position to
   # get the new position. This means this can't actually check if this
   # goes off the board. Note for simplicity black is always starting at
   # the top going down
   def move_directions(self):
-    if self.color == Color.BLACK:
-      forwards = 1
-    else:
-      forwards = -1
-    yield (forwards, -1)
-    yield (forwards, 1)
+    f = self.forwards()
+    yield (f, -1)
+    yield (f, 1)
     if self.king:
-      yield (-forwards, -1)
-      yield (-forwards, 1)
+      yield (-f, -1)
+      yield (-f, 1)
   
   # doubles all move lengths of move_directions to get jump_directions of
   # the piece
@@ -193,6 +197,62 @@ class CheckerGame:
     self.players = players
     self.turn = 0
 
+  # Attempts to carry out a full move on board. Board should not
+  # be self.board as this can modify board before finding the move
+  # to be bad (for example, in the case of double jumps). pos_ls
+  # should be a list of positions as (r,c)
+  # Returns True if move is accepted.
+  # Modifies board in place. If move was rejected consider board to
+  # contain garbage.
+  def _attempt_move(self, board, pos_ls):
+    # If there's more than one move, they must all be jumps
+    require_jumps = len(pos_ls) > 2
+    start_pos = pos_ls[0]
+    # If there's no piece here to move, reject move
+    if start_pos not in board.pieces:
+      return False
+    piece = board.pieces[start_pos]
+    started_as_king = piece.king
+    doing_jumps = board.is_move_jump(pos_ls[0], pos_ls[1])
+    if not started_as_king:
+      # If you didn't start as a king, you may not move backwards this turn
+      # even if there is a backwards jump there
+      src = pos_ls[0]
+      for dest in pos_ls[1:]:
+        sr,_ = src
+        dr,_ = dest
+        # If moving from src to dest row does not have the same sign as forwards
+        # then you are going backwards
+        if (dr-sr) / piece.forwards() < 0:
+          return False
+        src = dest
+    # Here we make each move, actually modifying board
+    src = pos_ls[0]
+    for dest in pos_ls[1:]:
+      if require_jumps and not board.is_move_jump(src, dest):
+        return False
+      elif not board.move(src, dest, piece.color):
+        return False
+      src = dest
+    # Once started, a multiple jump must be carried through to completion. However, if
+    # we were promoted during this move you are not requierd or allowed to carry out the
+    # backwards jump
+    if piece.king and not started_as_king:
+      # Promoted this round, don't check to see if can jump
+      return True
+    if not doing_jumps:
+      # We were never doing jumps, so we can't move any more
+      return True
+    # Otherwise we were doing jumps. Check to see if this piece could jump from last position.
+    # If it could we were required to do it, so reject the move.
+    (sr,sc) = pos_ls[-1]
+    for (mr,mc) in piece.jump_directions():
+      dr = mr + sr
+      dc = mc + sc
+      if board.is_valid_move( (sr,sc), (dr,dc), piece.color ):
+        return False
+    return True
+
   # Takes a full turn for one player. Returns True if the game continues
   def take_turn(self):
     player = self.players[self.turn]
@@ -210,33 +270,21 @@ class CheckerGame:
         other.show_player('GAMEOVER:Win')
         return False
       elif command == 'MOVE':
-        # Act on a temporary board so only commit if all moves in a double jump are sucessfull
-        temp_board = copy.deepcopy(self.board)
-        pos_ls = details.split(',')
+        pos_ls = [self.board.str_to_boardpos(s) for s in details.split(',')]
         if len(pos_ls) < 2:
           player.show_player('REJECTED:No comma found in move')
         else:
-          # If there's more than one move, they must all be jumps
-          require_jumps = len(pos_ls) > 2
-          any_rejections = False
-          ps = temp_board.str_to_boardpos(pos_ls[0])
-          for dest in pos_ls[1:]:
-            pd = temp_board.str_to_boardpos(dest)
-            if require_jumps and not temp_board.is_move_jump(ps, pd):
-              any_rejections = True
-              player.show_player('REJECTED:All moves must be a jump if more than one move')
-              break
-            elif not temp_board.move(ps, pd, player.color):
-              any_rejections = True
-              player.show_player('REJECTED:Not a valid checkers move')
-              break
-            ps = pd
-          if not any_rejections:
+          # Act on a temporary board so only commit if all moves in a double jump are sucessfull
+          temp_board = copy.deepcopy(self.board)
+          accepted = self._attempt_move(temp_board, pos_ls)
+          if accepted:
             # Commit board
             self.board = temp_board
             player.show_player('ACCEPTED:Move accepted')
             other.show_player('MOVE:%s' % details)
             break
+          else:
+            player.show_player('REJECTED:Not a valid checkers move')
       else:
         player.show_player('REJECTED:Not a valid command')
 
