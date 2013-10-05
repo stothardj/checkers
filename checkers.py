@@ -184,19 +184,6 @@ class CheckerBoard:
     self.pieces[dest] = p
     return True
 
-  # Returns true if either player has been eliminated from the board
-  def player_eliminated(self):
-    has_red = False
-    has_black = False
-    for piece in self.pieces.values():
-      if piece.color == Color.RED:
-        has_red = True
-      else:
-        has_black = True
-      if has_red and has_black:
-        return False
-    return True
-
   # Will transform a8 to (0,0) etc.
   def str_to_boardpos(self, s):
     cl = s[:1]
@@ -303,7 +290,9 @@ class CheckerGame:
       else:
         player.show_player('REJECTED:Not a valid command')
 
-    if self.board.player_eliminated():
+    # Note: if the other player has no more pieces then by definition they
+    # cannot move. Also handles them being completely blocked
+    if not self.board.can_move(Color.other(turn_color)):
       player.show_player('GAMEOVER:Win')
       other.show_player('GAMEOVER:Loss')
       return False
