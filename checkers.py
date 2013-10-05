@@ -135,12 +135,14 @@ class CheckerBoard:
   def move(self, src, dest, color):
     if not self.is_valid_move(src, dest, color):
       return False
+    (sr,sc) = src
+    (dr,dc) = dest
     if self.is_move_jump(src, dest):
-      (sr,sc) = src
-      (dr,dc) = dest
       del self.pieces[(dr+sr)//2,(dc+sc)//2]
     p = self.pieces[src]
     del self.pieces[src]
+    if dr == 0 or dr == self.size - 1:
+      p.king = True
     self.pieces[dest] = p
     return True
 
