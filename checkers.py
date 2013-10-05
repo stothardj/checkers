@@ -48,6 +48,11 @@ class CheckerPiece:
     if self.king:
       yield (-forwards, -1)
       yield (-forwards, 1)
+  
+  # doubles all move lengths of move_directions to get jump_directions of
+  # the piece
+  def jump_directions(self):
+    return (tuple(2*x for x in tup) for tup in self.move_directions())
 
 # A checker board. Represented internally as a map of positions to pieces
 # (0,0) represents top-left. Is (r,c) so (size-1,0) is bottom-left. Can only instantiate
@@ -86,10 +91,25 @@ class CheckerBoard:
     (sr,sc) = src
     (dr,dc) = dest
     p = self.pieces[src]
-    return (dr-sr,dc-sc) in (tuple(2*x for x in tup) for tup in p.move_directions())
+    return (dr-sr,dc-sc) in p.jump_directions()
+
+  # Returns true if the player controlling color pieces has a jump available to her.
+  def can_jump(self, color):
+    for pos,piece in self.pieces.items():
+      if piece.color == color:
+        (sr,sc) = pos
+        for (mr,mc) in piece.jump_directions():
+          dr = sr + mr
+          dc = sc + mc
+          # Warning: mutual recursion.
+          if self.is_valid_move(pos, (dr,dc), color):
+            return True
+    return False
   
   # Returns whether moving from src to dest would be a valid move. Does not move.
   # Does not take into account turn order. Board positions should be given as (r,c).
+  # For a double jump, is_valid_move needs to be called once for each step. Does
+  # enforce necessary to jump if available
   # Pass in the color you are allowed to move.
   def is_valid_move(self, src, dest, color):
     (sr,sc) = src
@@ -111,9 +131,10 @@ class CheckerBoard:
     # Check to make sure not trying to move other player's piece
     if p.color != color:
       return False
-    # If we are not trying to jump a piece, nothing left to check
+    # If we are not trying to jump a piece, this is only valid if we could not jump
     if (dr-sr,dc-sc) in p.move_directions():
-      return True
+      # Warning: mutual recursion.
+      return not self.can_jump(color)
     # Otherwise check to see if valid jump
     # Is this even somewhere we could jump to
     if not self.is_move_jump(src, dest):
