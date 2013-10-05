@@ -79,33 +79,36 @@ COMMAND:details\n
 The following commands can be sent from the client
 --------------------------------------------------
 
- * QUIT:ignored
-This causes the current player to lose
+<dl>
+ <dt>QUIT:ignored</dt>
+ <dd>This causes the current player to lose</dd>
 
- * MOVE:a3,b4
-This moves the piece to move from a3 to b4. This is a valid first move.
-For double (or more) jumps simply use more commas. For example:
-Move:a3,c5,a7
+ <dt>MOVE:a3,b4</dt>
+ <dd>This moves the piece to move from a3 to b4. This is a valid first move.
+     For double (or more) jumps simply use more commas. For example:
+     Move:a3,c5,a7</dd>
+</dl>
 
 The following commands can be sent from the server
 --------------------------------------------------
 
- * ACCEPTED:unimportant
-Signals that the move just given by the client was accepted as a valid
-move by the server.
+<dl>
+ <dt>ACCEPTED:unimportant</dt>
+ <dd>Signals that the move just given by the client was accepted as a valid
+     move by the server.</dd>
 
- * REJECTED:reason
-Signals that the move just given by the client was rejected by the server.
-A good client should be able to avoid this messages. The reason is for debug
-purposes.
+ <dt>REJECTED:reason</dt>
+ <dd>Signals that the move just given by the client was rejected by the server.
+     A good client should be able to avoid this messages. The reason is for debug
+     purposes.</dd>
 
- * MOVE:a3,b4
-Gives the move of the other player.
+ <dt>MOVE:a3,b4</dt>
+ <dd>Gives the move of the other player.</dd>
 
- * GAMEOVER:Win
-Alernatively will be GAMEOVER:Lose, depending on which happened. If the other
-player disconnected or quit this will be sent as the only message. If one player
-makes a move to win the server will first send the messages about the move just
-happened then immediatly following that will send this gameover message.
-
+ <dt>GAMEOVER:Win</dt>
+ <dd>Alernatively will be GAMEOVER:Lose, depending on which happened. If the other
+     player disconnected or quit this will be sent as the only message. If one player
+     makes a move to win the server will first send the messages about the move just
+     happened then immediatly following that will send this gameover message.</dd>
+</dl>
 
