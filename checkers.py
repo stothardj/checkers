@@ -151,7 +151,7 @@ class CheckerBoard:
       return False
     # If we are not trying to jump a piece, this is only valid if we could not jump
     if (dr-sr,dc-sc) in p.move_directions():
-      # Warning: mutual recursion.
+      # Warning: mutual recursion. lol
       return not self.can_jump(color)
     # Otherwise check to see if valid jump
     # Is this even somewhere we could jump to
